@@ -15,6 +15,14 @@ import sqlite3
 
 
 baseUrl = "https://movie.douban.com/top250?start="
+#define the regular expressions
+find_link = re.compile(r'<a href="(.*?)">') 
+find_img = re.compile(r'<img.*src="(.*?)"', re.S)
+find_title = re.compile(r'<span class="title">(.*)</span>')
+find_rating = re.compile(r'<span class="rating_num" property="v:average">(.*)</span>')
+find_judge = re.compile(r'<span>(\d*)人评价</span>')
+find_summary = re.compile(r'<span class="inq">(.*)</span>')
+find_related = re.compile(r'<p class="">(.*?)</p>', re.S)
 
 #the main function to run all of functions
 def main():
@@ -37,6 +45,46 @@ def getData(inputURL):
         url = baseUrl + str(i * 25)
         html = askURL(url)
         #analyze one by one
+        soup = BeautifulSoup(html, "html.parser")
+        for item in soup.findAll('div', class_="item"): #search for needed String
+            # store the info of one movie to a list
+            data = [] 
+            #do a typecasting
+            item = str(item)
+            link = re.findall(find_link, item)[0]
+            img = re.findall(find_img, item)[0]
+            title = re.findall(find_title, item) #some movies have two titles
+            rating = re.findall(find_rating, item)[0]
+            judge = re.findall(find_judge, item)[0]
+            summary = re.findall(find_summary, item)
+            related_info = re.findall(find_related, item)[0]
+            # do some data optimization, let it more beautiful :)
+            related_info = re.sub('<br(s\+)?/>(s\+)?', ' ', related_info)
+            related_info = re.sub('(\xa0)*','', related_info)
+            related_info = re.sub('(\n)*','', related_info)
+            related_info = re.sub('/','', related_info)
+            related_info = re.sub('\.*                             ','', related_info)
+            related_info = related_info.strip()
+            data.append(link)
+            data.append(img)
+            if(len(title) == 2):
+                chinese_title = title[0]
+                data.append(chinese_title)
+                foriegn_title = title[1].replace("/","")
+                data.append(foriegn_title.replace("\xa0",""))
+            else:
+                data.append(title)
+                data.append(" ") # add an empty space if there is no foriegn name
+            data.append(rating)
+            data.append(judge)
+            if(len(summary) != 0):
+                summary = summary[0].replace('。', "")
+                data.append(summary)
+            else:
+                data.append(" ") # add an empty space if there is no summary
+            datalist.append(data)
+            data.append(related_info)
+        print(datalist)
     return datalist
 
 #get the info from the pointed URL
@@ -61,4 +109,4 @@ def saveData(savePath):
 
 
 if __name__ == '__main__':
-    print(askURL("https://movie.douban.com/top250?start="))
+    getData(baseUrl)
