@@ -34,8 +34,8 @@ def main():
     #2. Analyze the data one by one
     #3. Save the data
     #save to current directory
-    savePath = ".\\Douban_Top250.xls"
-    saveData(savePath)
+    savePath = "Douban_Top250.xls"
+    saveData(datalist,savePath)
     
 #Explore the websites and analyze one by one
 def getData(inputURL):
@@ -84,7 +84,6 @@ def getData(inputURL):
                 data.append(" ") # add an empty space if there is no summary
             datalist.append(data)
             data.append(related_info)
-        print(datalist)
     return datalist
 
 #get the info from the pointed URL
@@ -104,9 +103,21 @@ def askURL(url):
     return html
 
 #Save the data
-def saveData(savePath):
-    return 0
+def saveData(datalist,savePath):
+    print("saving...")
+    book = xlwt.Workbook(encoding = 'utf-8')
+    sheet = book.add_sheet('Douban Movies Review Top250')
+    col = ["URL_Movie","URL_Picture","Chinese_Name","Foreign_Name","Marks","Number_of_Reviews","Summary","Related_Content"]
+    for i in range(len(col)):
+        sheet.write(0,i,col[i])
+    for i in range(250):
+        print("saving the number %d movie's information"%(i+1))
+        data = datalist[i]
+        for j in range(len(data)):
+            sheet.write(i+1,j,data[j])
+    book.save(savePath)
 
 
 if __name__ == '__main__':
-    getData(baseUrl)
+    main()
+    print("mission completed")
